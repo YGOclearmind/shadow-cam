@@ -1,5 +1,11 @@
 {
 	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+	  {
+		"path": "pages/index",
+		"style": {
+		  "navigationBarTitleText": "欢迎使用 ShadowCam"
+		}
+	  },
 		{
 			"path": "pages/camera",
 			"style": {
@@ -12,7 +18,20 @@
 			"style": {
 			  "navigationBarTitleText": "照片预览"
 			}
-		}
+		},
+		{
+			"path": "pages/settings",
+			"style": {
+			  "navigationBarTitleText": "设置"
+			}
+		  },
+		  {
+			"path": "pages/about",
+			"style": {
+			  "navigationBarTitleText": "关于"
+			}	
+		  }
+		
 	]
 	
 }

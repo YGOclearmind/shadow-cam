@@ -165,7 +165,7 @@
   // 跳转到预览页
   function navigateToPreview(imagePath) {
     uni.navigateTo({
-      url: `/pages/preview/preview?img=${encodeURIComponent(imagePath)}`,
+      url: `/pages/preview?img=${encodeURIComponent(imagePath)}`,
       fail: (err) => {
         console.error('跳转失败:', err)
         uni.previewImage({
