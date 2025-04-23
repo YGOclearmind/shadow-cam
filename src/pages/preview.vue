@@ -1,6 +1,6 @@
 <template>
   <view class="preview-container">
-    <image :src="imgPath" mode="aspectFit" class="preview-img" />
+    <image :src="imgPath" :mode="imgMode" class="preview-img" @load="handleImageLoad" />
 
     <view class="button-group">
       <button class="btn save-btn" @click="saveImage">💾 保存照片</button>
@@ -14,10 +14,20 @@ import { onLoad } from '@dcloudio/uni-app'
 import { ref } from 'vue'
 
 const imgPath = ref('')
+const imgMode = ref('aspectFill')
 
 onLoad((options) => {
   imgPath.value = decodeURIComponent(options.img || '')
 })
+
+function handleImageLoad(e) {
+  uni.getImageInfo({
+    src: imgPath.value,
+    success: (res) => {
+      imgMode.value = res.width > res.height ? 'aspectFit' : 'aspectFill'
+    }
+  })
+}
 
 function saveImage() {
   uni.saveImageToPhotosAlbum({
@@ -44,17 +54,16 @@ function goBack() {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background: #f5f7fa;
+  background: #555555;
   height: 100vh;
   padding: 30rpx;
 }
 
 .preview-img {
-  width: 90%;
-  max-height: 70vh;
-  border-radius: 20rpx;
-  box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.1);
-  margin-bottom: 50rpx;
+  width: 100%;
+  height: 75vh;
+  object-fit: cover;
+  margin-bottom: 30rpx;
 }
 
 .button-group {
@@ -72,12 +81,14 @@ function goBack() {
 }
 
 .save-btn {
-  background: linear-gradient(to right, #4facfe, #00f2fe);
+  background: linear-gradient(to right, #1E90FF, #0066CC);
   color: white;
+  opacity: 0.8;
 }
 
 .back-btn {
-  background: linear-gradient(to right, #fbc2eb, #a6c1ee);
+  background: linear-gradient(to right, #FFA500, #FF4500);
   color: white;
+  opacity: 0.8;
 }
 </style>
