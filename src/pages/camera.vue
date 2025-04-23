@@ -168,7 +168,7 @@ function navigateToPreview(imagePath) {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: linear-gradient(145deg, #1e1e2f, #2b2b3c);
+  background: #333333;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -197,13 +197,21 @@ function navigateToPreview(imagePath) {
 
 .btn {
   padding: 14px 30px;
-  background: rgba(255, 255, 255, 0.9);
   border-radius: 100px;
   font-size: 18px;
   color: #000;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+  box-shadow: 2px 2px 3px rgba(51, 51, 51, 0.5);
   border: none;
   transition: transform 0.1s ease;
+  opacity: 0.8;
+}
+
+.btn:first-child {
+  background: linear-gradient(to bottom, #90EE90, #008000);
+}
+
+.btn:last-child {
+  background: linear-gradient(to bottom, #FFC04D, #FF6B00);
 }
 
 .btn:active {
