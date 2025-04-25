@@ -1,7 +1,7 @@
 <template>
   <view class="container">
     <view class="logo-area">
-      <image class="logo" src="/static/logo.png" mode="aspectFit" />
+      <image class="logo" src="/static/ShadowCam.png" mode="aspectFit" />
       <text class="title">ShadowCam</text>
       <text class="subtitle">无形自拍机，记录不留痕</text>
     </view>
@@ -49,6 +49,7 @@ margin-top: 100rpx;
 width: 180rpx;
 height: 180rpx;
 margin-bottom: 30rpx;
+border-radius: 12px;
 }
 
 .title {
@@ -69,12 +70,17 @@ margin-top: 25rpx;
 }
 
 .start-btn {
-background-color: #4c8fff;
+background-color: #a0d8a0;
 color: white;
 font-size: 32rpx;
 padding: 20rpx 60rpx;
 border-radius: 100rpx;
 box-shadow: 0 10rpx 20rpx rgba(0, 0, 0, 0.1);
+transition: all 0.2s ease;
+}
+
+.start-btn:active {
+background-color: #88c088;
 }
 
 /* 增加设置 / 关于 按钮组的外边距，使间距更合理 */
