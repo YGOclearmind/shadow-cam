@@ -38,12 +38,7 @@
     </view>
 
     <!-- 模式切换栏 -->
-    <scroll-view
-      class="mode-switch"
-      scroll-x
-      :scroll-left="scrollLeft"
-      show-scrollbar="false"
-    >
+    <view class="mode-switch">
       <view
         v-for="mode in modes"
         :key="mode.value"
@@ -51,11 +46,11 @@
         @click="changeMode(mode.value)"
       >
         <view class="mode-icon">
-          <uni-icons :type="mode.icon" size="18" :color="currentMode === mode.value ? '#fff' : '#333'"></uni-icons>
+          <uni-icons :type="mode.icon" size="24" :color="currentMode === mode.value ? '#fff' : '#333'"></uni-icons>
         </view>
-        {{ mode.label }}
+        <view class="mode-label">{{ mode.label }}</view>
       </view>
-    </scroll-view>
+    </view>
 
     <!-- 拍照按钮区域 -->
     <view class="controls">
@@ -79,12 +74,12 @@ const flashMode = ref('off')
 const flashIcon = ref('flash-off')
 
 const modes = [
-  { label: '静默', value: 'silent', icon: 'eye' },
-  { label: '计时', value: 'timed', icon: 'eye' },
-  { label: '模糊', value: 'blur', icon: 'image' },
-  { label: '遮挡', value: 'mask', icon: 'person' },
-  { label: '记录', value: 'record', icon: 'videocam' },
-  { label: '伪装', value: 'disguise', icon: 'eye' },
+  { label: '静默模式', value: 'silent', icon: 'eye-slash-filled' }, // 眼睛图标
+  { label: '计时拍摄', value: 'timed', icon: 'spinner-cycle' }, // 时钟图标
+  { label: '模糊背景', value: 'blur', icon: 'image-filled' }, // 图片图标
+  { label: '人脸遮挡', value: 'mask', icon: 'person-filled' }, // 人物图标
+  { label: '视频录制', value: 'record', icon: 'videocam' }, // 视频图标
+  { label: '伪装模式', value: 'disguise', icon: 'help' } // 帮助图标
 ]
 
 const toggleFlash = () => {
@@ -110,6 +105,7 @@ const toggleFlash = () => {
 
 const changeMode = (mode) => {
   currentMode.value = mode
+  console.log('当前模式:', mode, '图标:', modes.find(m => m.value === mode)?.icon)
 }
 
 const switchCamera = () => {
@@ -187,7 +183,14 @@ const showPermissionDeniedAlert = () => {
     success: (res) => {
       if (res.confirm) {
         // #ifdef APP-PLUS
-        plus.runtime.openURL(plus.android.getProperty('app', 'packageName'))
+        plus.android.requestPermissions(
+          ['android.permission.CAMERA'],
+          (e) => {
+            if (e.deniedAlways && e.deniedAlways.length > 0) {
+              showPermissionDeniedAlert()
+            }
+          }
+        )
         // #endif
       }
     }
@@ -219,6 +222,10 @@ const checkAppCameraPermission = () => {
   )
   // #endif
 }
+// 注册组件
+const components = {
+  'uni-icons': uniIcons
+};
 </script>
 
 <style>
@@ -227,7 +234,11 @@ const checkAppCameraPermission = () => {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: #000;
+  background: #ffffff; /* 白色背景 */
+  color: #000000; /* 黑色文字 */
+  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.5px;
 }
 
 .camera-view {
@@ -237,6 +248,7 @@ const checkAppCameraPermission = () => {
   width: 100vw;
   height: 100vh;
   z-index: 1;
+  background: #ffffff; /* 白色背景 */
 }
 
 .top-controls {
@@ -253,7 +265,7 @@ const checkAppCameraPermission = () => {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.3); /* 深灰色背景 */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -264,7 +276,7 @@ const checkAppCameraPermission = () => {
 
 .top-controls .control-btn:active {
   transform: scale(0.95);
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.5); /* 更深的灰色背景 */
 }
 
 .controls {
@@ -280,37 +292,39 @@ const checkAppCameraPermission = () => {
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  border: 4px solid rgba(255, 255, 255, 0.5);
+  background: rgba(245, 245, 245, 0.9); /* 浅灰色背景 */
+  border: 4px solid rgba(230, 230, 230, 0.9); /* 浅灰色边框 */
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05); /* 添加内阴影 */
 }
 
 .controls .capture-btn .capture-inner {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: #fff;
+  background: rgba(220, 220, 220, 0.9); /* 加深的灰色 */
   transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* 添加轻微阴影 */
 }
 
 .controls .capture-btn:active {
   transform: scale(0.95);
-  border-color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(220, 220, 220, 0.9); /* 点击时加深边框 */
 }
 
 .controls .capture-btn:active .capture-inner {
   transform: scale(0.9);
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(210, 210, 210, 0.9); /* 点击时加深的灰色 */
 }
 
 .h5-tip {
   width: 100%;
   height: 100%;
-  background-color: #1a1a1a;
-  color: #ccc;
+  background-color: #1a1a1a; /* 更深的灰色背景 */
+  color: #ccc; /* 灰色文字 */
   font-size: 16px;
   display: flex;
   justify-content: center;
@@ -320,56 +334,91 @@ const checkAppCameraPermission = () => {
   line-height: 1.6;
 }
 
+@keyframes flash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
 .mode-switch {
   position: absolute;
   bottom: 160px;
-  left: 0;
-  width: 100%;
-  padding: 12px 16px;
-  display: flex;
-  flex-direction: row;
-  gap: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 15px; /* 增大间距 */
   z-index: 20;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(20px);
-  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
+  border-radius: 20px;
 }
 
 .mode-switch .mode-item {
-  padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 20px;
-  font-size: 14px;
-  color: #333;
-  white-space: nowrap;
+  height: 70px; /* 减小高度 */
+  background: #e8f5e9;
+  border-radius: 12px;
+  color: #000000;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 6px;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  justify-content: center;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-family: 'PingFang SC';
+  border: 2px solid transparent;
+  will-change: transform;
 }
 
 .mode-switch .mode-item .mode-icon {
+  height: 60px;
+  width: 100%;
   display: flex;
   align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #000000; /* 黑色图标 */
+}
+
+.mode-switch .mode-item .mode-label {
+  height: 20px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #000000; /* 黑色文字 */
 }
 
 .mode-switch .mode-item.active {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  color: #fff;
-  font-weight: 500;
-  box-shadow: 0 4px 10px rgba(0, 178, 255, 0.3);
+  transform: scale(1.1);
+  background: #c8e6c9;
+  animation: flash 0.3s ease; /* 添加闪烁效果 */
+  transition: transform 0.2s ease;
 }
 
 @media (max-height: 700px) {
   .mode-switch {
     bottom: 140px;
-    padding: 10px 12px;
+    padding: 10px;
+    border-radius: 15px; /* 调整圆角 */
+    gap: 8px;
   }
   
   .mode-switch .mode-item {
-    padding: 6px 12px;
-    font-size: 13px;
+    height: 70px;
+    border-radius: 10px; /* 更小的圆角使其更圆润 */
+  }
+
+  .mode-switch .mode-item .mode-icon {
+    height: 50px;
+    font-size: 20px;
+  }
+
+  .mode-switch .mode-item .mode-label {
+    font-size: 11px;
   }
   
   .controls {
