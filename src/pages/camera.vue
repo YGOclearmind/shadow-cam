@@ -117,6 +117,29 @@ const switchCamera = () => {
 }
 
 const takePhoto = () => {
+  if (currentMode.value === 'timed') {
+    let count = 3
+    const timer = setInterval(() => {
+      if (count > 0) {
+        uni.showToast({
+          title: `${count--}`,
+          icon: 'none',
+          duration: 800
+        })
+      } else {
+        clearInterval(timer)
+        performPhoto() // 执行真正的拍照逻辑
+      }
+    }, 1000)
+  } else if (currentMode.value === 'silent') {
+    doSilentCapture()
+    return
+  }
+  else {
+    performPhoto()
+  }
+}
+const performPhoto = () => {
   // #ifdef MP-WEIXIN
   if (!cameraContext.value) {
     uni.showToast({ title: '相机初始化中...', icon: 'none' })
@@ -155,10 +178,37 @@ const takePhoto = () => {
   // #endif
 
   // #ifdef H5
-  uni.showToast({ 
-    title: '请使用手机端体验完整功能', 
+  uni.showToast({
+    title: '请使用手机端体验完整功能',
     icon: 'none',
     duration: 3000
+  })
+  // #endif
+}
+const doSilentCapture = () => {
+  // #ifdef MP-WEIXIN
+  if (!cameraContext.value) return
+  cameraContext.value.takePhoto({
+    quality: 'low', // 静默模式可用 low 提高隐蔽性和速度
+    success: (res) => {
+      console.log('静默拍照成功:', res.tempImagePath)
+      // TODO: 可以把照片保存、上传、加入队列等
+    },
+    fail: (err) => {
+      console.error('静默拍照失败:', err)
+    }
+  })
+  // #endif
+
+  // #ifdef APP-PLUS
+  uni.chooseImage({
+    sourceType: ['camera'],
+    success: (res) => {
+      console.log('静默模式 - APP拍照成功:', res.tempFilePaths[0])
+    },
+    fail: (err) => {
+      console.error('静默模式拍照失败:', err)
+    }
   })
   // #endif
 }
