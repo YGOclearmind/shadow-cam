@@ -34,7 +34,7 @@
   <style>
   .container {
     padding: 40rpx;
-    background-color: #f5f5f5;
+    background-color: #e5e5d9;
     height: 100vh;
   }
   

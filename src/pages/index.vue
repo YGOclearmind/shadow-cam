@@ -35,7 +35,7 @@ align-items: center;
 justify-content: space-between;
 height: 90vh;
 padding: 80rpx 30rpx 100rpx;
-background: linear-gradient(to bottom, #fdfbfb, #ebedee);
+background: #e5e5d9;
 }
 
 .logo-area {
@@ -94,9 +94,14 @@ margin-top: 15rpx; /* 增加此行代码 */
 .mini-btn {
 font-size: 26rpx;
 padding: 12rpx 30rpx;
-background-color: #ffffffcc;
+background-color: #e8f5e9;
 border-radius: 60rpx;
 color: #333;
 border: 1rpx solid #ccc;
+transition: all 0.2s ease;
+}
+
+.mini-btn:active {
+background-color: #c8e6c9;
 }
 </style>

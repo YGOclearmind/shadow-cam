@@ -1,7 +1,7 @@
 <template>
     <view class="container">
       <view class="logo-area">
-        <image class="logo" src="/static/logo.png" mode="aspectFit" />
+        <image class="logo" src="/static/ShadowCam.png" mode="aspectFit" />
         <text class="title">ShadowCam</text>
         <text class="version">版本 1.0.0</text>
       </view>
@@ -23,7 +23,7 @@
   <style>
   .container {
     padding: 40rpx;
-    background: linear-gradient(to bottom, #f8f9fa, #e8eaf0);
+    background: #e5e5d9;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -61,8 +61,8 @@
   }
   
   .paragraph {
-    font-size: 28rpx;
-    line-height: 44rpx;
+    font-size: 36rpx;
+    line-height: 70rpx;
     color: #555;
     margin-bottom: 30rpx;
   }

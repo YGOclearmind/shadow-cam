@@ -54,7 +54,7 @@ function goBack() {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background: #555555;
+  background: #e5e5d9; /* 统一背景色 */
   height: 100vh;
   padding: 30rpx;
 }
@@ -72,23 +72,16 @@ function goBack() {
 }
 
 .btn {
-  padding: 20rpx 50rpx;
-  font-size: 30rpx;
-  border-radius: 100rpx;
-  background: #ffffff;
-  box-shadow: 0 6rpx 12rpx rgba(0, 0, 0, 0.1);
+  font-size: 26rpx;
+  padding: 12rpx 30rpx;
+  background-color: #c5efd9;
+  border-radius: 60rpx;
   color: #333;
+  border: 1rpx solid #ccc;
+  transition: all 0.2s ease;
 }
 
-.save-btn {
-  background: linear-gradient(to right, #1E90FF, #0066CC);
-  color: white;
-  opacity: 0.8;
-}
-
-.back-btn {
-  background: linear-gradient(to right, #FFA500, #FF4500);
-  color: white;
-  opacity: 0.8;
+.btn:active {
+  background-color: #c8e6c9;
 }
 </style>
