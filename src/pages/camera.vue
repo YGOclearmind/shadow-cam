@@ -256,7 +256,7 @@ const doSilentCapture = () => {
 
 const navigateToPreview = (imagePath) => {
   uni.navigateTo({
-    url: `/pages/preview?img=${encodeURIComponent(imagePath)}`,
+    url: `/pages/preview?img=${encodeURIComponent(imagePath)}&mode=${currentMode.value}`,
     fail: (err) => {
       uni.previewImage({
         urls: [imagePath],
