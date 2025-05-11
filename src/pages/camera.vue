@@ -117,6 +117,10 @@ const switchCamera = () => {
 }
 
 const takePhoto = () => {
+  // 模式判断逻辑：
+  // timed - 计时拍摄模式
+  // silent - 静默模式
+  // 其他模式(blur/mask/record/disguise) - 通用拍照逻辑
   if (currentMode.value === 'timed') {
     let count = 3
     const timer = setInterval(() => {
@@ -140,6 +144,11 @@ const takePhoto = () => {
   }
 }
 const performPhoto = () => {
+  // 通用拍照逻辑，适用于以下模式：
+  // blur - 模糊背景模式
+  // mask - 人脸遮挡模式  
+  // record - 视频录制模式
+  // disguise - 伪装模式
   // #ifdef MP-WEIXIN
   if (!cameraContext.value) {
     uni.showToast({ title: '相机初始化中...', icon: 'none' })
@@ -161,20 +170,39 @@ const performPhoto = () => {
   // #endif
 
   // #ifdef APP-PLUS
-  uni.chooseImage({
-    sourceType: ['camera'],
-    camera: currentCamera.value === 'front' ? 'front' : 'back',
-    success: (res) => {
-      navigateToPreview(res.tempFilePaths[0])
-    },
-    fail: (err) => {
-      if (err.errMsg.includes('permission')) {
-        showPermissionDeniedAlert()
-      } else {
-        uni.showToast({ title: '拍照失败', icon: 'none' })
+  if (currentMode.value === 'record') {
+    uni.chooseVideo({
+      sourceType: ['camera'],
+      camera: currentCamera.value === 'front' ? 'front' : 'back',
+      maxDuration: 60, // 最长60秒
+      success: (res) => {
+        uni.showToast({ title: '视频录制成功', icon: 'success' })
+        navigateToPreview(res.tempFilePath)
+      },
+      fail: (err) => {
+        if (err.errMsg.includes('permission')) {
+          showPermissionDeniedAlert()
+        } else {
+          uni.showToast({ title: '视频录制失败', icon: 'none' })
+        }
       }
-    }
-  })
+    })
+  } else {
+    uni.chooseImage({
+      sourceType: ['camera'],
+      camera: currentCamera.value === 'front' ? 'front' : 'back',
+      success: (res) => {
+        navigateToPreview(res.tempFilePaths[0])
+      },
+      fail: (err) => {
+        if (err.errMsg.includes('permission')) {
+          showPermissionDeniedAlert()
+        } else {
+          uni.showToast({ title: '拍照失败', icon: 'none' })
+        }
+      }
+    })
+  }
   // #endif
 
   // #ifdef H5
@@ -186,13 +214,29 @@ const performPhoto = () => {
   // #endif
 }
 const doSilentCapture = () => {
+  // 静默模式(silent)专用拍照逻辑
   // #ifdef MP-WEIXIN
   if (!cameraContext.value) return
   cameraContext.value.takePhoto({
     quality: 'low', // 静默模式可用 low 提高隐蔽性和速度
     success: (res) => {
       console.log('静默拍照成功:', res.tempImagePath)
-      // TODO: 可以把照片保存、上传、加入队列等
+      uni.saveImageToPhotosAlbum({
+        filePath: res.tempImagePath,
+        success: () => {
+          uni.showToast({
+            title: '图片已保存到相册',
+            icon: 'success'
+          })
+        },
+        fail: (err) => {
+          console.error('保存到相册失败:', err)
+          uni.showToast({
+            title: '保存失败，请检查权限',
+            icon: 'none'
+          })
+        }
+      })
     },
     fail: (err) => {
       console.error('静默拍照失败:', err)
@@ -205,11 +249,27 @@ const doSilentCapture = () => {
     sourceType: ['camera'],
     success: (res) => {
       console.log('静默模式 - APP拍照成功:', res.tempFilePaths[0])
+      uni.saveImageToPhotosAlbum({
+        filePath: res.tempFilePaths[0],
+        success: () => {
+          uni.showToast({
+            title: '图片已保存到相册',
+            icon: 'success'
+          })
+        },
+        fail: (err) => {
+          console.error('保存到相册失败:', err)
+          uni.showToast({
+            title: '保存失败，请检查权限',
+            icon: 'none'
+          })
+        }
+      })
     },
     fail: (err) => {
       console.error('静默模式拍照失败:', err)
     }
-  })
+  }) 
   // #endif
 }
 
@@ -284,7 +344,7 @@ const components = {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: #ffffff; /* 白色背景 */
+  background: #e5e5d9; /* 统一背景色 */
   color: #000000; /* 黑色文字 */
   font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
   font-weight: 400;
@@ -298,7 +358,7 @@ const components = {
   width: 100vw;
   height: 100vh;
   z-index: 1;
-  background: #ffffff; /* 白色背景 */
+  background: #ecece4; /* 白色背景 */
 }
 
 .top-controls {
@@ -342,8 +402,8 @@ const components = {
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: rgba(245, 245, 245, 0.9); /* 浅灰色背景 */
-  border: 4px solid rgba(230, 230, 230, 0.9); /* 浅灰色边框 */
+  background: rgba(243, 243, 243, 0.9); /* 浅灰色背景 */
+  border: 4px solid rgba(214, 214, 214, 0.9); /* 浅灰色边框 */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -362,7 +422,7 @@ const components = {
 
 .controls .capture-btn:active {
   transform: scale(0.95);
-  border-color: rgba(220, 220, 220, 0.9); /* 点击时加深边框 */
+  border-color: rgba(158, 158, 158, 0.9); /* 点击时加深边框 */
 }
 
 .controls .capture-btn:active .capture-inner {
