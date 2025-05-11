@@ -170,20 +170,39 @@ const performPhoto = () => {
   // #endif
 
   // #ifdef APP-PLUS
-  uni.chooseImage({
-    sourceType: ['camera'],
-    camera: currentCamera.value === 'front' ? 'front' : 'back',
-    success: (res) => {
-      navigateToPreview(res.tempFilePaths[0])
-    },
-    fail: (err) => {
-      if (err.errMsg.includes('permission')) {
-        showPermissionDeniedAlert()
-      } else {
-        uni.showToast({ title: '拍照失败', icon: 'none' })
+  if (currentMode.value === 'record') {
+    uni.chooseVideo({
+      sourceType: ['camera'],
+      camera: currentCamera.value === 'front' ? 'front' : 'back',
+      maxDuration: 60, // 最长60秒
+      success: (res) => {
+        uni.showToast({ title: '视频录制成功', icon: 'success' })
+        navigateToPreview(res.tempFilePath)
+      },
+      fail: (err) => {
+        if (err.errMsg.includes('permission')) {
+          showPermissionDeniedAlert()
+        } else {
+          uni.showToast({ title: '视频录制失败', icon: 'none' })
+        }
       }
-    }
-  })
+    })
+  } else {
+    uni.chooseImage({
+      sourceType: ['camera'],
+      camera: currentCamera.value === 'front' ? 'front' : 'back',
+      success: (res) => {
+        navigateToPreview(res.tempFilePaths[0])
+      },
+      fail: (err) => {
+        if (err.errMsg.includes('permission')) {
+          showPermissionDeniedAlert()
+        } else {
+          uni.showToast({ title: '拍照失败', icon: 'none' })
+        }
+      }
+    })
+  }
   // #endif
 
   // #ifdef H5
