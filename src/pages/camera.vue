@@ -10,6 +10,16 @@
     ></camera>
     <!-- #endif -->
 
+    <!-- 新增特效画布 -->
+    <canvas 
+    id="effectCanvas"
+    v-show="showEffectCanvas" 
+    class="effect-canvas" 
+    :width="canvasSize.pixelWidth"
+    :height="canvasSize.pixelHeight"
+    :style="{ width: canvasSize.width, height: canvasSize.height }"
+  ></canvas>
+
     <!-- App端用黑色占位层表示系统相机 -->
     <!-- #ifdef APP-PLUS -->
     <view 
@@ -64,6 +74,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import uniIcons from '@dcloudio/uni-ui/lib/uni-icons/uni-icons.vue'
+import { nextTick } from 'vue'
 
 const showCamera = ref(true)
 const cameraContext = ref(null)
@@ -72,6 +83,13 @@ const currentMode = ref('silent')
 const scrollLeft = ref(0)
 const flashMode = ref('off')
 const flashIcon = ref('flash-off')
+
+const canvasSize = ref({
+  width: '100vw',
+  height: '100vh',
+  pixelWidth: 300,
+  pixelHeight: 400
+})
 
 const modes = [
   { label: '静默模式', value: 'silent', icon: 'eye-slash-filled' }, // 眼睛图标
@@ -155,11 +173,10 @@ const performPhoto = () => {
     return
   }
   uni.showLoading({ title: '拍摄中...', mask: true })
-  cameraContext.value.takePhoto({
-    quality: 'high',
-    success: (res) => {
-      uni.hideLoading()
-      navigateToPreview(res.tempImagePath)
+ cameraContext.value.takePhoto({
+    success: async (res) => {
+      const processed = await processImage(res.tempImagePath)
+      navigateToPreview(processed)
     },
     fail: (err) => {
       uni.hideLoading()
@@ -308,7 +325,7 @@ const showPermissionDeniedAlert = () => {
   showCamera.value = false
 }
 
-onMounted(() => {
+onMounted(async() => {
   // #ifdef MP-WEIXIN
   setTimeout(() => {
     cameraContext.value = uni.createCameraContext()
@@ -319,6 +336,103 @@ onMounted(() => {
   checkAppCameraPermission()
   // #endif
 })
+
+/ 获取相机组件尺寸
+  await nextTick()
+  const query = uni.createSelectorQuery().in(this)
+  query.select('.camera-view').boundingClientRect(rect => {
+    if (rect) {
+      const pixelRatio = uni.getSystemInfoSync().pixelRatio
+      canvasSize.value = {
+        width: rect.width + 'px',
+        height: rect.height + 'px',
+        pixelWidth: rect.width * pixelRatio,
+        pixelHeight: rect.height * pixelRatio
+      }
+    }
+  }).exec()
+})
+
+// 新增图像处理方法
+const processImage = async (tempFilePath) => {
+  if (currentMode.value === 'blur') {
+    return await applyBlurEffect(tempFilePath)
+  }
+  if (currentMode.value === 'mask') {
+    return await applyFaceMask(tempFilePath)
+  }
+  return tempFilePath
+}
+// 模糊效果实现
+const applyBlurEffect = (tempFilePath) => {
+  return new Promise((resolve, reject) => {
+    const ctx = uni.createCanvasContext('effectCanvas', this)
+    
+    // 使用缩放实现简易模糊
+    ctx.save()
+    ctx.scale(0.3, 0.3)
+    ctx.drawImage(tempFilePath, 0, 0, canvasSize.value.pixelWidth / 0.3, canvasSize.value.pixelHeight / 0.3)
+    ctx.restore()
+    
+    ctx.draw(false, () => {
+      uni.canvasToTempFilePath({
+        canvasId: 'effectCanvas',
+        success: (res) => resolve(res.tempFilePath),
+        fail: reject
+      }, this)
+    })
+  })
+}
+
+// 人脸遮挡实现
+const applyFaceMask = async (tempFilePath) => {
+  try {
+    // 模拟人脸检测结果
+    const faceRect = await detectFace(tempFilePath)
+    
+    const ctx = uni.createCanvasContext('effectCanvas', this)
+    ctx.drawImage(tempFilePath, 0, 0, canvasSize.value.pixelWidth, canvasSize.value.pixelHeight)
+    
+    // 绘制遮挡区域
+    ctx.beginPath()
+    ctx.arc(faceRect.x + faceRect.width/2, faceRect.y + faceRect.height/2, 
+            Math.min(faceRect.width, faceRect.height)/2, 0, Math.PI * 2)
+    ctx.fillStyle = 'rgba(0,0,0,0.7)'
+    ctx.fill()
+    
+    return await new Promise((resolve, reject) => {
+      ctx.draw(false, () => {
+        uni.canvasToTempFilePath({
+          canvasId: 'effectCanvas',
+          success: (res) => resolve(res.tempFilePath),
+          fail: reject
+        }, this)
+      })
+    })
+  } catch (err) {
+    console.error('人脸遮挡失败:', err)
+    return tempFilePath
+  }
+}
+
+// 模拟人脸检测（实际项目需替换真实检测逻辑）
+const detectFace = (filePath) => {
+  return new Promise((resolve) => {
+    // 获取图片信息
+    uni.getImageInfo({
+      src: filePath,
+      success: (res) => {
+        // 模拟人脸在图片中央
+        resolve({
+          x: res.width * 0.25,
+          y: res.height * 0.25,
+          width: res.width * 0.5,
+          height: res.height * 0.5
+        })
+      }
+    })
+  })
+}
 
 const checkAppCameraPermission = () => {
   // #ifdef APP-PLUS
@@ -351,14 +465,25 @@ const components = {
   letter-spacing: 0.5px;
 }
 
+/* 新增canvas样式 */
+.effect-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
 .camera-view {
   position: absolute;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
+
   z-index: 1;
   background: #ecece4; /* 白色背景 */
+
 }
 
 .top-controls {
