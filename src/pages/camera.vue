@@ -335,7 +335,7 @@ onMounted(async() => {
   // #ifdef APP-PLUS
   checkAppCameraPermission()
   // #endif
-})
+
 
 / 获取相机组件尺寸
   await nextTick()
