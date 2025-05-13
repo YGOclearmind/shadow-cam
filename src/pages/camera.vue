@@ -83,6 +83,7 @@ const currentMode = ref('silent')
 const scrollLeft = ref(0)
 const flashMode = ref('off')
 const flashIcon = ref('flash-off')
+const showEffectCanvas = ref(false)
 
 const canvasSize = ref({
   width: '100vw',
@@ -351,28 +352,52 @@ onMounted(async() => {
       }
     }
   }).exec()
-})
 
 // 新增图像处理方法
 const processImage = async (tempFilePath) => {
-  if (currentMode.value === 'blur') {
-    return await applyBlurEffect(tempFilePath)
+  try {
+    showEffectCanvas.value = true
+    await nextTick()
+    
+    if (currentMode.value === 'blur') {
+      return await applyBlurEffect(tempFilePath)
+    }
+    if (currentMode.value === 'mask') {
+      return await applyFaceMask(tempFilePath)
+    }
+    return tempFilePath
+  } finally {
+    showEffectCanvas.value = false
   }
-  if (currentMode.value === 'mask') {
-    return await applyFaceMask(tempFilePath)
-  }
-  return tempFilePath
 }
+
 // 模糊效果实现
 const applyBlurEffect = (tempFilePath) => {
   return new Promise((resolve, reject) => {
     const ctx = uni.createCanvasContext('effectCanvas', this)
     
-    // 使用缩放实现简易模糊
-    ctx.save()
-    ctx.scale(0.3, 0.3)
-    ctx.drawImage(tempFilePath, 0, 0, canvasSize.value.pixelWidth / 0.3, canvasSize.value.pixelHeight / 0.3)
-    ctx.restore()
+    // 1. 先绘制原图
+    ctx.drawImage(tempFilePath, 0, 0, canvasSize.value.pixelWidth, canvasSize.value.pixelHeight)
+    
+    // 2. 应用多层模糊效果
+    for (let i = 0; i < 3; i++) {
+      ctx.save()
+      // 缩小画布实现模糊
+      const scale = 1 - (i * 0.15)
+      ctx.scale(scale, scale)
+      ctx.drawImage(
+        tempFilePath, 
+        0, 
+        0, 
+        canvasSize.value.pixelWidth / scale, 
+        canvasSize.value.pixelHeight / scale
+      )
+      ctx.restore()
+      
+      // 应用透明度混合
+      ctx.globalAlpha = 0.3
+      ctx.draw()
+    }
     
     ctx.draw(false, () => {
       uni.canvasToTempFilePath({
@@ -387,18 +412,34 @@ const applyBlurEffect = (tempFilePath) => {
 // 人脸遮挡实现
 const applyFaceMask = async (tempFilePath) => {
   try {
-    // 模拟人脸检测结果
-    const faceRect = await detectFace(tempFilePath)
+    showEffectCanvas.value = true
+    await nextTick()
     
+    // 1. 绘制原图
     const ctx = uni.createCanvasContext('effectCanvas', this)
     ctx.drawImage(tempFilePath, 0, 0, canvasSize.value.pixelWidth, canvasSize.value.pixelHeight)
     
-    // 绘制遮挡区域
-    ctx.beginPath()
-    ctx.arc(faceRect.x + faceRect.width/2, faceRect.y + faceRect.height/2, 
-            Math.min(faceRect.width, faceRect.height)/2, 0, Math.PI * 2)
-    ctx.fillStyle = 'rgba(0,0,0,0.7)'
-    ctx.fill()
+    // 2. 检测人脸位置
+    const faceRects = await detectFaces(tempFilePath)
+    
+    // 3. 为每个检测到的人脸添加遮挡
+    faceRects.forEach(face => {
+      // 绘制模糊椭圆遮挡
+      ctx.beginPath()
+      ctx.ellipse(
+        face.x + face.width/2, 
+        face.y + face.height/2, 
+        face.width/2 * 1.2, 
+        face.height/2 * 1.5, 
+        0, 0, Math.PI * 2
+      )
+      
+      // 创建模糊效果
+      ctx.shadowColor = 'rgba(0,0,0,0.7)'
+      ctx.shadowBlur = 20
+      ctx.fillStyle = 'rgba(0,0,0,0.7)'
+      ctx.fill()
+    })
     
     return await new Promise((resolve, reject) => {
       ctx.draw(false, () => {
@@ -412,23 +453,47 @@ const applyFaceMask = async (tempFilePath) => {
   } catch (err) {
     console.error('人脸遮挡失败:', err)
     return tempFilePath
+  } finally {
+    showEffectCanvas.value = false
   }
 }
 
 // 模拟人脸检测（实际项目需替换真实检测逻辑）
-const detectFace = (filePath) => {
+const detectFaces = (filePath) => {
   return new Promise((resolve) => {
-    // 获取图片信息
     uni.getImageInfo({
       src: filePath,
       success: (res) => {
-        // 模拟人脸在图片中央
-        resolve({
-          x: res.width * 0.25,
-          y: res.height * 0.25,
-          width: res.width * 0.5,
-          height: res.height * 0.5
-        })
+        // 模拟检测到1-3个人脸
+        const faceCount = Math.min(3, Math.max(1, Math.floor(Math.random() * 3)))
+        const faces = []
+        
+        for (let i = 0; i < faceCount; i++) {
+          // 随机位置但确保在图片内
+          const width = res.width * (0.2 + Math.random() * 0.2)
+          const height = width * (0.9 + Math.random() * 0.4)
+          const x = Math.min(
+            res.width - width, 
+            Math.max(0, res.width * (Math.random() * 0.7))
+          )
+          const y = Math.min(
+            res.height - height, 
+            Math.max(0, res.height * (Math.random() * 0.6))
+          )
+          
+          faces.push({ x, y, width, height })
+        }
+        
+        resolve(faces)
+      },
+      fail: () => {
+        // 默认返回中央位置的人脸
+        resolve([{
+          x: res.width * 0.3,
+          y: res.height * 0.3,
+          width: res.width * 0.4,
+          height: res.height * 0.4
+        }])
       }
     })
   })
@@ -472,6 +537,7 @@ const components = {
   left: 0;
   z-index: 5;
   pointer-events: none;
+  background: transparent;
 }
 
 .camera-view {
