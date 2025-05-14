@@ -352,7 +352,7 @@ onMounted(async() => {
       }
     }
   }).exec()
-
+})
 // 新增图像处理方法
 const processImage = async (tempFilePath) => {
   try {
